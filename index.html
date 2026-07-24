@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>范德荟 2026｜商业化体验设计作品集</title>
+  <link rel="stylesheet" href="./viewer.css">
+</head>
+<body>
+  <main class="viewer">
+    <aside class="sidebar" aria-label="PPT 页面缩略图导航">
+      <header class="sidebar-header">
+        <strong>PORTFOLIO</strong>
+        <span>2026</span>
+      </header>
+      <nav class="thumbnails" id="thumbnails"></nav>
+    </aside>
+
+    <section class="stage" aria-label="作品集页面">
+      <div class="ambient" aria-hidden="true"></div>
+      <div class="slide-frame">
+        <img
+          id="slideA"
+          class="master-slide slide-active"
+          src="./public/slides-master/slide-01.png?v=hd2"
+          alt="作品集第 1 页"
+          width="5120"
+          height="2880"
+        >
+        <img id="slideB" class="master-slide" alt="" width="5120" height="2880">
+      </div>
+      <div class="page-status" aria-live="polite">
+        <span id="currentPage">01</span>
+        <i></i>
+        <span>43</span>
+      </div>
+      <div class="keyboard-tip">方向键 / 滚轮翻页</div>
+    </section>
+  </main>
+
+  <script>
+    const total = 43;
+    const masterFile = page => `./public/slides-master/slide-${String(page).padStart(2, '0')}.png?v=hd2`;
+    const thumbnailFile = page => `./public/thumbnails/slide-${String(page).padStart(2, '0')}.jpg`;
+    const thumbnails = document.getElementById('thumbnails');
+    const currentPage = document.getElementById('currentPage');
+    const slides = [document.getElementById('slideA'), document.getElementById('slideB')];
+    let front = 0;
+    let active = 1;
+    let locked = false;
+
+    for (let page = 1; page <= total; page += 1) {
+      const button = document.createElement('button');
+      button.className = 'thumbnail';
+      button.dataset.page = page;
+      button.setAttribute('aria-label', `前往第 ${page} 页`);
+      button.innerHTML = `
+        <span>${String(page).padStart(2, '0')}</span>
+        <img src="${thumbnailFile(page)}" alt="" loading="${page < 7 ? 'eager' : 'lazy'}">
+      `;
+      button.addEventListener('click', () => show(page));
+      thumbnails.appendChild(button);
+    }
+
+    const thumbnailButtons = [...document.querySelectorAll('.thumbnail')];
+    thumbnailButtons[0].classList.add('active');
+    thumbnailButtons[0].setAttribute('aria-current', 'page');
+
+    async function prepareImage(image, src) {
+      image.src = src;
+      if (image.decode) {
+        await image.decode();
+        return;
+      }
+      if (!image.complete) {
+        await new Promise((resolve, reject) => {
+          image.onload = resolve;
+          image.onerror = reject;
+        });
+      }
+    }
+
+    async function show(page) {
+      const next = Math.max(1, Math.min(total, page));
+      if (next === active || locked) return;
+      locked = true;
+      const back = front === 0 ? 1 : 0;
+      const nextSlide = slides[back];
+      await prepareImage(nextSlide, masterFile(next));
+      active = next;
+      currentPage.textContent = String(active).padStart(2, '0');
+      nextSlide.alt = `作品集第 ${active} 页`;
+      thumbnailButtons.forEach((button, index) => {
+        button.classList.toggle('active', index + 1 === active);
+        button.setAttribute('aria-current', index + 1 === active ? 'page' : 'false');
+      });
+      thumbnailButtons[active - 1].scrollIntoView({ block: 'center', behavior: 'smooth' });
+
+      requestAnimationFrame(() => {
+        slides[front].classList.remove('slide-active');
+        nextSlide.classList.add('slide-active');
+        window.setTimeout(() => {
+          front = back;
+          locked = false;
+        }, 140);
+      });
+    }
+
+    window.addEventListener('keydown', event => {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') {
+        event.preventDefault();
+        show(active + 1);
+      }
+      if (event.key === 'ArrowUp' || event.key === 'ArrowLeft' || event.key === 'PageUp') {
+        event.preventDefault();
+        show(active - 1);
+      }
+      if (event.key === 'Home') show(1);
+      if (event.key === 'End') show(total);
+    });
+
+    document.querySelector('.stage').addEventListener('wheel', event => {
+      if (Math.abs(event.deltaY) < 12) return;
+      event.preventDefault();
+      show(active + (event.deltaY > 0 ? 1 : -1));
+    }, { passive: false });
+
+  </script>
+</body>
+</html>
