@@ -42,7 +42,7 @@
   <script>
     const total = 78;
     const masterFile = page => `./public/slides-master/slide-${String(page).padStart(2, '0')}.png?v=hd3`;
-    const thumbnailFile = page => `./public/thumbnails/slide-${String(page).padStart(2, '0')}.jpg`;
+    const thumbnailFile = page => `./public/thumbnails/slide-${String(page).padStart(2, '0')}.jpg?v=hd3`;
     const thumbnails = document.getElementById('thumbnails');
     const currentPage = document.getElementById('currentPage');
     const slides = [document.getElementById('slideA'), document.getElementById('slideB')];
