@@ -6,6 +6,17 @@
   <meta name="color-scheme" content="dark">
   <title>范德荟 2026｜商业化体验设计作品集</title>
   <link rel="stylesheet" href="./viewer.css">
+  <script>
+    window.goatcounter = {
+      path: '/slide/01',
+      title: '作品集第 1 页'
+    };
+  </script>
+  <script
+    data-goatcounter="https://fandehui-portfolio.goatcounter.com/count"
+    async
+    src="https://gc.zgo.at/count.js"
+  ></script>
 </head>
 <body>
   <main class="viewer">
@@ -81,6 +92,15 @@
       }
     }
 
+    function trackPage(page) {
+      if (!window.goatcounter || !window.goatcounter.count) return;
+      const pageNumber = String(page).padStart(2, '0');
+      window.goatcounter.count({
+        path: `/slide/${pageNumber}`,
+        title: `作品集第 ${page} 页`
+      });
+    }
+
     async function show(page) {
       const next = Math.max(1, Math.min(total, page));
       if (next === active || locked) return;
@@ -89,6 +109,7 @@
       const nextSlide = slides[back];
       await prepareImage(nextSlide, masterFile(next));
       active = next;
+      trackPage(active);
       currentPage.textContent = String(active).padStart(2, '0');
       nextSlide.alt = `作品集第 ${active} 页`;
       thumbnailButtons.forEach((button, index) => {
