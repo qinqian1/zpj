@@ -34,7 +34,7 @@
         <img
           id="slideA"
           class="master-slide slide-active"
-          src="./public/slides-master/slide-01.png?v=hd3"
+          src="./public/slides-master/slide-01.png?v=hd4"
           alt="作品集第 1 页"
           width="5120"
           height="2880"
@@ -44,16 +44,16 @@
       <div class="page-status" aria-live="polite">
         <span id="currentPage">01</span>
         <i></i>
-        <span>78</span>
+        <span>79</span>
       </div>
       <div class="keyboard-tip">方向键 / 滚轮翻页</div>
     </section>
   </main>
 
   <script>
-    const total = 78;
-    const masterFile = page => `./public/slides-master/slide-${String(page).padStart(2, '0')}.png?v=hd3`;
-    const thumbnailFile = page => `./public/thumbnails/slide-${String(page).padStart(2, '0')}.jpg?v=hd3`;
+    const total = 79;
+    const masterFile = page => `./public/slides-master/slide-${String(page).padStart(2, '0')}.png?v=hd4`;
+    const thumbnailFile = page => `./public/thumbnails/slide-${String(page).padStart(2, '0')}.jpg?v=hd4`;
     const thumbnails = document.getElementById('thumbnails');
     const currentPage = document.getElementById('currentPage');
     const slides = [document.getElementById('slideA'), document.getElementById('slideB')];
