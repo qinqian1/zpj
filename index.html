@@ -31,15 +31,34 @@
     <section class="stage" aria-label="作品集页面">
       <div class="ambient" aria-hidden="true"></div>
       <div class="slide-frame">
-        <img
-          id="slideA"
-          class="master-slide slide-active"
-          src="./public/slides-master/slide-01.png?v=hd4"
-          alt="作品集第 1 页"
-          width="5120"
-          height="2880"
-        >
-        <img id="slideB" class="master-slide" alt="" width="5120" height="2880">
+        <picture>
+          <source
+            id="sourceA"
+            type="image/avif"
+            srcset="./public/slides-avif-1920/slide-01.avif?v=hd5 1920w, ./public/slides-avif-3200/slide-01.avif?v=hd5 3200w"
+            sizes="(max-width: 720px) 100vw, 86vw"
+          >
+          <source
+            id="webpSourceA"
+            type="image/webp"
+            srcset="./public/slides-webp-1920/slide-01.webp?v=hd5 1920w, ./public/slides-webp-3200/slide-01.webp?v=hd5 3200w"
+            sizes="(max-width: 720px) 100vw, 86vw"
+          >
+          <img
+            id="slideA"
+            class="master-slide slide-active"
+            src="./public/slides-master/slide-01.png?v=hd5"
+            alt="作品集第 1 页"
+            width="5120"
+            height="2880"
+            fetchpriority="high"
+          >
+        </picture>
+        <picture>
+          <source id="sourceB" type="image/avif">
+          <source id="webpSourceB" type="image/webp">
+          <img id="slideB" class="master-slide" alt="" width="5120" height="2880">
+        </picture>
       </div>
       <div class="page-status" aria-live="polite">
         <span id="currentPage">01</span>
@@ -52,11 +71,21 @@
 
   <script>
     const total = 79;
-    const masterFile = page => `./public/slides-master/slide-${String(page).padStart(2, '0')}.png?v=hd4`;
-    const thumbnailFile = page => `./public/thumbnails/slide-${String(page).padStart(2, '0')}.jpg?v=hd4`;
+    const assetVersion = 'hd5';
+    const masterSizes = '(max-width: 720px) 100vw, 86vw';
+    const pageNumber = page => String(page).padStart(2, '0');
+    const pngFile = page => `./public/slides-master/slide-${pageNumber(page)}.png?v=${assetVersion}`;
+    const avifFile = (page, width) => `./public/slides-avif-${width}/slide-${pageNumber(page)}.avif?v=${assetVersion}`;
+    const webpFile = (page, width) => `./public/slides-webp-${width}/slide-${pageNumber(page)}.webp?v=${assetVersion}`;
+    const avifSrcset = page => `${avifFile(page, 1920)} 1920w, ${avifFile(page, 3200)} 3200w`;
+    const webpSrcset = page => `${webpFile(page, 1920)} 1920w, ${webpFile(page, 3200)} 3200w`;
+    const thumbnailFile = page => `./public/thumbnails/slide-${pageNumber(page)}.jpg?v=hd4`;
     const thumbnails = document.getElementById('thumbnails');
     const currentPage = document.getElementById('currentPage');
     const slides = [document.getElementById('slideA'), document.getElementById('slideB')];
+    const sources = [document.getElementById('sourceA'), document.getElementById('sourceB')];
+    const webpSources = [document.getElementById('webpSourceA'), document.getElementById('webpSourceB')];
+    const preloads = new Map();
     let front = 0;
     let active = 1;
     let locked = false;
@@ -68,7 +97,7 @@
       button.setAttribute('aria-label', `前往第 ${page} 页`);
       button.innerHTML = `
         <span>${String(page).padStart(2, '0')}</span>
-        <img src="${thumbnailFile(page)}" alt="" loading="${page < 7 ? 'eager' : 'lazy'}">
+        <img src="${thumbnailFile(page)}" alt="" loading="${page < 4 ? 'eager' : 'lazy'}" decoding="async">
       `;
       button.addEventListener('click', () => show(page));
       thumbnails.appendChild(button);
@@ -78,8 +107,12 @@
     thumbnailButtons[0].classList.add('active');
     thumbnailButtons[0].setAttribute('aria-current', 'page');
 
-    async function prepareImage(image, src) {
-      image.src = src;
+    async function prepareImage(image, source, webpSource, page) {
+      source.srcset = avifSrcset(page);
+      source.sizes = masterSizes;
+      webpSource.srcset = webpSrcset(page);
+      webpSource.sizes = masterSizes;
+      image.src = pngFile(page);
       if (image.decode) {
         await image.decode();
         return;
@@ -90,6 +123,36 @@
           image.onerror = reject;
         });
       }
+    }
+
+    function preloadPage(page) {
+      if (page < 1 || page > total || preloads.has(page)) return;
+      const picture = document.createElement('picture');
+      const source = document.createElement('source');
+      const webpSource = document.createElement('source');
+      const image = new Image();
+      picture.hidden = true;
+      source.type = 'image/avif';
+      source.srcset = avifSrcset(page);
+      source.sizes = masterSizes;
+      webpSource.type = 'image/webp';
+      webpSource.srcset = webpSrcset(page);
+      webpSource.sizes = masterSizes;
+      image.src = pngFile(page);
+      picture.append(source, webpSource, image);
+      document.body.appendChild(picture);
+      preloads.set(page, picture);
+    }
+
+    function preloadAhead(page) {
+      preloads.forEach((picture, preloadedPage) => {
+        if (preloadedPage <= page || preloadedPage > page + 2) {
+          picture.remove();
+          preloads.delete(preloadedPage);
+        }
+      });
+      preloadPage(page + 1);
+      preloadPage(page + 2);
     }
 
     function trackPage(page) {
@@ -107,7 +170,7 @@
       locked = true;
       const back = front === 0 ? 1 : 0;
       const nextSlide = slides[back];
-      await prepareImage(nextSlide, masterFile(next));
+      await prepareImage(nextSlide, sources[back], webpSources[back], next);
       active = next;
       trackPage(active);
       currentPage.textContent = String(active).padStart(2, '0');
@@ -124,8 +187,15 @@
         window.setTimeout(() => {
           front = back;
           locked = false;
+          preloadAhead(active);
         }, 140);
       });
+    }
+
+    if (slides[0].complete) {
+      preloadAhead(1);
+    } else {
+      slides[0].addEventListener('load', () => preloadAhead(1), { once: true });
     }
 
     window.addEventListener('keydown', event => {
