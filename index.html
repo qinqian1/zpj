@@ -35,19 +35,19 @@
           <source
             id="sourceA"
             type="image/avif"
-            srcset="./public/slides-avif-1920/slide-01.avif?v=hd5 1920w, ./public/slides-avif-3200/slide-01.avif?v=hd5 3200w"
+            srcset="./public/slides-avif-1920/slide-01.avif?v=hd6 1920w, ./public/slides-avif-3200/slide-01.avif?v=hd6 3200w"
             sizes="(max-width: 720px) 100vw, 86vw"
           >
           <source
             id="webpSourceA"
             type="image/webp"
-            srcset="./public/slides-webp-1920/slide-01.webp?v=hd5 1920w, ./public/slides-webp-3200/slide-01.webp?v=hd5 3200w"
+            srcset="./public/slides-webp-1920/slide-01.webp?v=hd6 1920w, ./public/slides-webp-3200/slide-01.webp?v=hd6 3200w"
             sizes="(max-width: 720px) 100vw, 86vw"
           >
           <img
             id="slideA"
             class="master-slide slide-active"
-            src="./public/slides-master/slide-01.png?v=hd5"
+            src="./public/slides-master/slide-01.png?v=hd6"
             alt="作品集第 1 页"
             width="5120"
             height="2880"
@@ -71,7 +71,7 @@
 
   <script>
     const total = 79;
-    const assetVersion = 'hd5';
+    const assetVersion = 'hd6';
     const masterSizes = '(max-width: 720px) 100vw, 86vw';
     const pageNumber = page => String(page).padStart(2, '0');
     const pngFile = page => `./public/slides-master/slide-${pageNumber(page)}.png?v=${assetVersion}`;
@@ -79,7 +79,7 @@
     const webpFile = (page, width) => `./public/slides-webp-${width}/slide-${pageNumber(page)}.webp?v=${assetVersion}`;
     const avifSrcset = page => `${avifFile(page, 1920)} 1920w, ${avifFile(page, 3200)} 3200w`;
     const webpSrcset = page => `${webpFile(page, 1920)} 1920w, ${webpFile(page, 3200)} 3200w`;
-    const thumbnailFile = page => `./public/thumbnails/slide-${pageNumber(page)}.jpg?v=hd4`;
+    const thumbnailFile = page => `./public/thumbnails/slide-${pageNumber(page)}.jpg?v=${assetVersion}`;
     const thumbnails = document.getElementById('thumbnails');
     const currentPage = document.getElementById('currentPage');
     const slides = [document.getElementById('slideA'), document.getElementById('slideB')];
