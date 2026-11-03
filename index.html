@@ -71,6 +71,9 @@
 
   <script>
     const total = 79;
+    // Keep original page numbers so these slides can be restored later.
+    const visiblePages = Array.from({ length: total }, (_, index) => index + 1)
+      .filter(page => page < 4 || page > 46);
     const assetVersion = 'hd6';
     const masterSizes = '(max-width: 720px) 100vw, 86vw';
     const pageNumber = page => String(page).padStart(2, '0');
@@ -90,7 +93,7 @@
     let active = 1;
     let locked = false;
 
-    for (let page = 1; page <= total; page += 1) {
+    for (const page of visiblePages) {
       const button = document.createElement('button');
       button.className = 'thumbnail';
       button.dataset.page = page;
@@ -126,7 +129,7 @@
     }
 
     function preloadPage(page) {
-      if (page < 1 || page > total || preloads.has(page)) return;
+      if (!visiblePages.includes(page) || preloads.has(page)) return;
       const picture = document.createElement('picture');
       const source = document.createElement('source');
       const webpSource = document.createElement('source');
@@ -145,14 +148,15 @@
     }
 
     function preloadAhead(page) {
+      const position = visiblePages.indexOf(page);
+      const nextPages = visiblePages.slice(position + 1, position + 3);
       preloads.forEach((picture, preloadedPage) => {
-        if (preloadedPage <= page || preloadedPage > page + 2) {
+        if (!nextPages.includes(preloadedPage)) {
           picture.remove();
           preloads.delete(preloadedPage);
         }
       });
-      preloadPage(page + 1);
-      preloadPage(page + 2);
+      nextPages.forEach(preloadPage);
     }
 
     function trackPage(page) {
@@ -165,8 +169,8 @@
     }
 
     async function show(page) {
-      const next = Math.max(1, Math.min(total, page));
-      if (next === active || locked) return;
+      const next = page;
+      if (!visiblePages.includes(next) || next === active || locked) return;
       locked = true;
       const back = front === 0 ? 1 : 0;
       const nextSlide = slides[back];
@@ -175,11 +179,12 @@
       trackPage(active);
       currentPage.textContent = String(active).padStart(2, '0');
       nextSlide.alt = `作品集第 ${active} 页`;
-      thumbnailButtons.forEach((button, index) => {
-        button.classList.toggle('active', index + 1 === active);
-        button.setAttribute('aria-current', index + 1 === active ? 'page' : 'false');
+      thumbnailButtons.forEach(button => {
+        const isActive = Number(button.dataset.page) === active;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-current', isActive ? 'page' : 'false');
       });
-      thumbnailButtons[active - 1].scrollIntoView({ block: 'center', behavior: 'smooth' });
+      thumbnailButtons[visiblePages.indexOf(active)].scrollIntoView({ block: 'center', behavior: 'smooth' });
 
       requestAnimationFrame(() => {
         slides[front].classList.remove('slide-active');
@@ -201,11 +206,11 @@
     window.addEventListener('keydown', event => {
       if (event.key === 'ArrowDown' || event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') {
         event.preventDefault();
-        show(active + 1);
+        show(visiblePages[visiblePages.indexOf(active) + 1]);
       }
       if (event.key === 'ArrowUp' || event.key === 'ArrowLeft' || event.key === 'PageUp') {
         event.preventDefault();
-        show(active - 1);
+        show(visiblePages[visiblePages.indexOf(active) - 1]);
       }
       if (event.key === 'Home') show(1);
       if (event.key === 'End') show(total);
@@ -214,7 +219,7 @@
     document.querySelector('.stage').addEventListener('wheel', event => {
       if (Math.abs(event.deltaY) < 12) return;
       event.preventDefault();
-      show(active + (event.deltaY > 0 ? 1 : -1));
+      show(visiblePages[visiblePages.indexOf(active) + (event.deltaY > 0 ? 1 : -1)]);
     }, { passive: false });
 
   </script>
