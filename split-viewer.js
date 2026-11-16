@@ -3,15 +3,15 @@
   // Page numbers reference the original portfolio; assets are shared with the main site.
   const editions = {
     ai: { label: 'AI', pages: [1, 2, 3, 5, ...range(11, 26), 7, ...range(41, 46), 79] },
-    b2b: { label: 'B2B', pages: [1, 2, 3, 8, ...range(64, 70), 6, ...range(27, 40), 5, ...range(11, 26), 79] },
+    b2b: { label: 'B2B', pages: range(1, 46) },
     c: { label: 'C', pages: range(1, 33) }
   };
   const edition = editions[document.body.dataset.edition];
   const pages = edition.pages;
   const number = value => String(value).padStart(2, '0');
-  const isC = document.body.dataset.edition === 'c';
-  const asset = (type, page, ext) => isC
-    ? `./assets/${type === 'thumbnails' ? 'thumbnails' : type.replace('slides-', '')}/${number(page)}.${ext}?v=c20261110`
+  const localAssets = ['c', 'b2b'].includes(document.body.dataset.edition);
+  const asset = (type, page, ext) => localAssets
+    ? `./assets/${type === 'thumbnails' ? 'thumbnails' : type.replace('slides-', '')}/${number(page)}.${ext}?v=${document.body.dataset.edition}20261116`
     : `../public/${type}/slide-${number(page)}.${ext}?v=hd6`;
   const srcset = (page, ext) => `${asset(`slides-${ext}-1920`, page, ext)} 1920w, ${asset(`slides-${ext}-3200`, page, ext)} 3200w`;
   document.body.innerHTML = `
@@ -53,11 +53,11 @@
   buttons[0].setAttribute('aria-current', 'page');
 
   function setImage(slot, page, position) {
-    if (!isC) sources[slot].srcset = srcset(page, 'avif');
+    if (!localAssets) sources[slot].srcset = srcset(page, 'avif');
     sources[slot].sizes = sizes;
     webpSources[slot].srcset = srcset(page, 'webp');
     webpSources[slot].sizes = sizes;
-    slides[slot].src = isC ? asset('slides-webp-1920', page, 'webp') : asset('slides-master', page, 'png');
+    slides[slot].src = localAssets ? asset('slides-webp-1920', page, 'webp') : asset('slides-master', page, 'png');
     slides[slot].alt = `${edition.label} 作品集第 ${position + 1} 页`;
   }
   function preloadAhead(index) {
@@ -69,7 +69,7 @@
       if (preloads.has(page)) return;
       const picture = document.createElement('picture');
       picture.hidden = true;
-      picture.innerHTML = `${isC ? '' : `<source type="image/avif" srcset="${srcset(page, 'avif')}" sizes="${sizes}">`}<source type="image/webp" srcset="${srcset(page, 'webp')}" sizes="${sizes}"><img src="${isC ? asset('slides-webp-1920', page, 'webp') : asset('slides-master', page, 'png')}" alt="">`;
+      picture.innerHTML = `${localAssets ? '' : `<source type="image/avif" srcset="${srcset(page, 'avif')}" sizes="${sizes}">`}<source type="image/webp" srcset="${srcset(page, 'webp')}" sizes="${sizes}"><img src="${localAssets ? asset('slides-webp-1920', page, 'webp') : asset('slides-master', page, 'png')}" alt="">`;
       document.body.appendChild(picture);
       preloads.set(page, picture);
     });
