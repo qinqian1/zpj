@@ -11,7 +11,7 @@
   const number = value => String(value).padStart(2, '0');
   const localAssets = ['c', 'b2b'].includes(document.body.dataset.edition);
   const asset = (type, page, ext) => localAssets
-    ? `./assets/${type === 'thumbnails' ? 'thumbnails' : type.replace('slides-', '')}/${number(page)}.${ext}?v=${document.body.dataset.edition}20261116`
+    ? `./assets/${type === 'thumbnails' ? 'thumbnails' : type.replace('slides-', '')}/${number(page)}.${ext}?v=${document.body.dataset.edition}20261121`
     : `../public/${type}/slide-${number(page)}.${ext}?v=hd6`;
   const srcset = (page, ext) => `${asset(`slides-${ext}-1920`, page, ext)} 1920w, ${asset(`slides-${ext}-3200`, page, ext)} 3200w`;
   document.body.innerHTML = `
